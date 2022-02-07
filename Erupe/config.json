@@ -9,6 +9,10 @@
         "LogOutboundMessages": false,
 		"Event": 0, 
         "OpcodeMessages": false
+		"SaveDumps": {
+			"Enabled": true,
+			"OutputDir": "savedata"
+		}
 		
     },
     "discord": {
