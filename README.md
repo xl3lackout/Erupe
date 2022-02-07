@@ -7,4 +7,14 @@ A pastebin for general overview, tips, and FAQ: https://pastebin.com/QqAwZSTC
 An upload for the quest and scenario files will be here: https://github.com/xl3lackout/MHFZ-Quest-Files
 (itll take a while its like 300k+ files)
 
-We should be getting an upload for client files if you don't already have your hands on them, but it cant be handled through github, ill post the link here.
+Client Files (Game Files) if you need them:
+
+1fichier: https://1fichier.com/?51066bxpv20gpicf780r
+1fichier is very fast and doesn't have a quota, but if your download fails you have to wait two hours. Rather spartan.
+ 
+Drive: https://drive.google.com/file/d/1REYFX6JNANmKR07XaY6yWzucQMc-u-mq/view
+Google Drive is reliable, but there's sometimes an inexplicable quota when too many people download it. Honestly your best choice for pretty much anything since you can also make a copy of the files to your own Drive.
+ 
+Anonfiles: https://anonfiles.com/Jf135bG0x2/Erupe_-_Community_Edition_zip
+Anonfiles is middle-of-the-road speed, but the download will always stay up no matter how many times it's been downloaded by others. A bit untrustworthy but that's just the nature of anonymity.
+
