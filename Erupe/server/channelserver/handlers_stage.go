@@ -13,11 +13,12 @@ func handleMsgSysCreateStage(s *Session, p mhfpacket.MHFPacket) {
 	pkt := p.(*mhfpacket.MsgSysCreateStage)
 
 	s.server.stagesLock.Lock()
-	stage := NewStage(pkt.StageID)
-	stage.maxPlayers = uint16(pkt.PlayerCount)
-	s.server.stages[stage.id] = stage
+	if s.server.stages[pkt.StageID]==nil{
+		stage := NewStage(pkt.StageID)
+		stage.maxPlayers = uint16(pkt.PlayerCount)
+		s.server.stages[stage.id] = stage
+	}
 	s.server.stagesLock.Unlock()
-
 	doAckSimpleSucceed(s, pkt.AckHandle, []byte{0x00, 0x00, 0x00, 0x00})
 }
 
@@ -91,32 +92,36 @@ func doStageTransfer(s *Session, ackHandle uint32, stageID string) {
 		clientNotif := byteframe.NewByteFrame()
 		for session := range s.stage.clients {
 			var cur mhfpacket.MHFPacket
-			cur = &mhfpacket.MsgSysInsertUser{
-				CharID: session.charID,
-			}
-			clientNotif.WriteUint16(uint16(cur.Opcode()))
-			cur.Build(clientNotif, session.clientContext)
+			if session.charID != s.charID {
+				cur = &mhfpacket.MsgSysInsertUser{
+					CharID: session.charID,
+				}
+				clientNotif.WriteUint16(uint16(cur.Opcode()))
+				cur.Build(clientNotif, session.clientContext)
 
-			cur = &mhfpacket.MsgSysNotifyUserBinary{
-				CharID:     session.charID,
-				BinaryType: 1,
-			}
-			clientNotif.WriteUint16(uint16(cur.Opcode()))
-			cur.Build(clientNotif, session.clientContext)
+				cur = &mhfpacket.MsgSysNotifyUserBinary{
+					CharID:     session.charID,
+					BinaryType: 1,
+				}
+				clientNotif.WriteUint16(uint16(cur.Opcode()))
+				cur.Build(clientNotif, session.clientContext)
 
-			cur = &mhfpacket.MsgSysNotifyUserBinary{
-				CharID:     session.charID,
-				BinaryType: 2,
-			}
-			clientNotif.WriteUint16(uint16(cur.Opcode()))
-			cur.Build(clientNotif, session.clientContext)
+				cur = &mhfpacket.MsgSysNotifyUserBinary{
+					CharID:     session.charID,
+					BinaryType: 2,
+				}
+				clientNotif.WriteUint16(uint16(cur.Opcode()))
+				cur.Build(clientNotif, session.clientContext)
 
-			cur = &mhfpacket.MsgSysNotifyUserBinary{
-				CharID:     session.charID,
-				BinaryType: 3,
+				cur = &mhfpacket.MsgSysNotifyUserBinary{
+					CharID:     session.charID,
+					BinaryType: 3,
+				}
+				clientNotif.WriteUint16(uint16(cur.Opcode()))
+				cur.Build(clientNotif, session.clientContext)
+			} else {
+				continue
 			}
-			clientNotif.WriteUint16(uint16(cur.Opcode()))
-			cur.Build(clientNotif, session.clientContext)
 		}
 		s.stage.RUnlock()
 		clientNotif.WriteUint16(0x0010) // End it.
@@ -127,16 +132,18 @@ func doStageTransfer(s *Session, ackHandle uint32, stageID string) {
 		clientDupObjNotif := byteframe.NewByteFrame()
 		s.stage.RLock()
 		for _, obj := range s.stage.objects {
-			cur := &mhfpacket.MsgSysDuplicateObject{
-				ObjID:       obj.id,
-				X:           obj.x,
-				Y:           obj.y,
-				Z:           obj.z,
-				Unk0:        0,
-				OwnerCharID: obj.ownerCharID,
+			if obj.ownerCharID != s.charID {
+				cur := &mhfpacket.MsgSysDuplicateObject{
+					ObjID:       obj.id,
+					X:           obj.x,
+					Y:           obj.y,
+					Z:           obj.z,
+					Unk0:        0,
+					OwnerCharID: obj.ownerCharID,
+				}
+				clientDupObjNotif.WriteUint16(uint16(cur.Opcode()))
+				cur.Build(clientDupObjNotif, s.clientContext)
 			}
-			clientDupObjNotif.WriteUint16(uint16(cur.Opcode()))
-			cur.Build(clientDupObjNotif, s.clientContext)
 		}
 		s.stage.RUnlock()
 		clientDupObjNotif.WriteUint16(0x0010) // End it.
@@ -169,7 +176,7 @@ func removeSessionFromStage(s *Session) {
 
 func handleMsgSysEnterStage(s *Session, p mhfpacket.MHFPacket) {
 	pkt := p.(*mhfpacket.MsgSysEnterStage)
-
+	fmt.Printf("The Stage is %s\n",pkt.StageID)
 	// Push our current stage ID to the movement stack before entering another one.
 	s.Lock()
 	s.stageMoveStack.Push(s.stageID)

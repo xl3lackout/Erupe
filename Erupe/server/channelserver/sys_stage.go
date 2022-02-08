@@ -1,10 +1,9 @@
 package channelserver
 
 import (
-	"sync"
-
-	"github.com/Solenataris/Erupe/network/mhfpacket"
 	"github.com/Andoryuuta/byteframe"
+	"github.com/Solenataris/Erupe/network/mhfpacket"
+	"sync"
 )
 
 // StageObject holds infomation about a specific stage object.
@@ -13,6 +12,12 @@ type StageObject struct {
 	id          uint32
 	ownerCharID uint32
 	x, y, z     float32
+}
+
+type ObjectMap struct {
+	id uint8
+	charid uint32
+	status bool
 }
 
 // stageBinaryKey is a struct used as a map key for identifying a stage binary part.
@@ -34,6 +39,7 @@ type Stage struct {
 	// Save all object in stage
 	objects map[uint32]*StageObject
 
+	objectList map[uint8]*ObjectMap
 	// Map of session -> charID.
 	// These are clients that are CURRENTLY in the stage
 	clients map[*Session]uint32
@@ -61,7 +67,9 @@ func NewStage(ID string) *Stage {
 		rawBinaryData:       make(map[stageBinaryKey][]byte),
 		maxPlayers:          4,
 		gameObjectCount:     1,
+		objectList:			 make(map[uint8]*ObjectMap),
 	}
+	s.InitObjectList()
 	return s
 }
 
@@ -83,4 +91,33 @@ func (s *Stage) BroadcastMHF(pkt mhfpacket.MHFPacket, ignoredSession *Session) {
 		// Enqueue in a non-blocking way that drops the packet if the connections send buffer channel is full.
 		session.QueueSendNonBlocking(bf.Data())
 	}
+}
+
+func (s *Stage) InitObjectList() {
+	for seq:=uint8(0x7f);seq>uint8(0);seq-- {
+			newObj := &ObjectMap{
+				id:          seq,
+				charid: uint32(0),
+				status:           false,
+			}
+			s.objectList[seq] = newObj
+		}
+}
+
+func (s *Stage) GetNewObjectID(CharID uint32) uint32 {
+	ObjId:=uint8(0)
+	for seq:=uint8(0x7f);seq>uint8(0);seq--{
+		if s.objectList[seq].status == false {
+			ObjId=seq
+			break
+		}
+	}
+	s.objectList[ObjId].status=true
+	s.objectList[ObjId].charid=CharID
+	bf := byteframe.NewByteFrame()
+	bf.WriteUint8(uint8(0))
+	bf.WriteUint8(ObjId)
+	bf.WriteUint16(uint16(0))
+	obj :=uint32(bf.Data()[3]) | uint32(bf.Data()[2])<<8 | uint32(bf.Data()[1])<<16 | uint32(bf.Data()[0])<<32
+	return obj
 }

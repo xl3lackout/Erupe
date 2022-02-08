@@ -853,8 +853,9 @@ func handleMsgMhfReadBeatLevel(s *Session, p mhfpacket.MHFPacket) {
 }
 
 func handleMsgMhfUpdateBeatLevel(s *Session, p mhfpacket.MHFPacket) {
-pkt := p.(*mhfpacket.MsgMhfUpdateBeatLevel)
-doAckBufSucceed(s, pkt.AckHandle, []byte{0x00, 0x00, 0x00, 0x00})
+    pkt := p.(*mhfpacket.MsgMhfUpdateBeatLevel)
+
+    doAckBufSucceed(s, pkt.AckHandle, []byte{0x00, 0x00, 0x00, 0x00})
 }
 
 func handleMsgMhfReadBeatLevelAllRanking(s *Session, p mhfpacket.MHFPacket) {}

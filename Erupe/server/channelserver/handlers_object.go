@@ -14,8 +14,7 @@ func handleMsgSysCreateObject(s *Session, p mhfpacket.MHFPacket) {
 	s.server.Lock()
 
 	// Make a new stage object and insert it into the stage.
-	objID := s.charID
-
+	objID := s.stage.GetNewObjectID(s.charID)
 	newObj := &StageObject{
 		id:          objID,
 		ownerCharID: s.charID,
@@ -24,16 +23,14 @@ func handleMsgSysCreateObject(s *Session, p mhfpacket.MHFPacket) {
 		z:           pkt.Z,
 	}
 
-	s.stage.objects[objID] = newObj
+	s.stage.objects[s.charID] = newObj
 
 	// Unlock the stage.
 	s.server.Unlock()
-
 	// Response to our requesting client.
 	resp := byteframe.NewByteFrame()
 	resp.WriteUint32(objID) // New local obj handle.
 	doAckSimpleSucceed(s, pkt.AckHandle, resp.Data())
-
 	// Duplicate the object creation to all sessions in the same stage.
 	dupObjUpdate := &mhfpacket.MsgSysDuplicateObject{
 		ObjID:       objID,
@@ -54,14 +51,13 @@ func handleMsgSysPositionObject(s *Session, p mhfpacket.MHFPacket) {
 		fmt.Printf("[%s] with objectID [%d] move to (%f,%f,%f)\n\n", s.Name, pkt.ObjID, pkt.X, pkt.Y, pkt.Z)
 	}
 	s.stage.Lock()
-	object, ok := s.stage.objects[pkt.ObjID]
+	object, ok := s.stage.objects[s.charID]
 	if ok {
 		object.x = pkt.X
 		object.y = pkt.Y
 		object.z = pkt.Z
 	}
 	s.stage.Unlock()
-
 	// One of the few packets we can just re-broadcast directly.
 	s.stage.BroadcastMHF(pkt, s)
 }
