@@ -13,11 +13,9 @@ func handleMsgSysCreateStage(s *Session, p mhfpacket.MHFPacket) {
 	pkt := p.(*mhfpacket.MsgSysCreateStage)
 
 	s.server.stagesLock.Lock()
-	if s.server.stages[pkt.StageID]==nil{
 		stage := NewStage(pkt.StageID)
 		stage.maxPlayers = uint16(pkt.PlayerCount)
 		s.server.stages[stage.id] = stage
-	}
 	s.server.stagesLock.Unlock()
 	doAckSimpleSucceed(s, pkt.AckHandle, []byte{0x00, 0x00, 0x00, 0x00})
 }
@@ -92,7 +90,6 @@ func doStageTransfer(s *Session, ackHandle uint32, stageID string) {
 		clientNotif := byteframe.NewByteFrame()
 		for session := range s.stage.clients {
 			var cur mhfpacket.MHFPacket
-			if session.charID != s.charID {
 				cur = &mhfpacket.MsgSysInsertUser{
 					CharID: session.charID,
 				}
@@ -119,9 +116,6 @@ func doStageTransfer(s *Session, ackHandle uint32, stageID string) {
 				}
 				clientNotif.WriteUint16(uint16(cur.Opcode()))
 				cur.Build(clientNotif, session.clientContext)
-			} else {
-				continue
-			}
 		}
 		s.stage.RUnlock()
 		clientNotif.WriteUint16(0x0010) // End it.
@@ -132,7 +126,6 @@ func doStageTransfer(s *Session, ackHandle uint32, stageID string) {
 		clientDupObjNotif := byteframe.NewByteFrame()
 		s.stage.RLock()
 		for _, obj := range s.stage.objects {
-			if obj.ownerCharID != s.charID {
 				cur := &mhfpacket.MsgSysDuplicateObject{
 					ObjID:       obj.id,
 					X:           obj.x,
@@ -143,7 +136,6 @@ func doStageTransfer(s *Session, ackHandle uint32, stageID string) {
 				}
 				clientDupObjNotif.WriteUint16(uint16(cur.Opcode()))
 				cur.Build(clientDupObjNotif, s.clientContext)
-			}
 		}
 		s.stage.RUnlock()
 		clientDupObjNotif.WriteUint16(0x0010) // End it.
@@ -171,8 +163,16 @@ func removeSessionFromStage(s *Session) {
 			// Actually delete it form the objects map.
 			delete(s.stage.objects, objID)
 		}
-	}
 }
+	for objListID, stageObjectList := range s.stage.objectList {
+		if stageObjectList.charid == s.charID {
+			//Added to prevent duplicates from flooding ObjectMap and causing server hangs
+			s.stage.objectList[objListID].status=false
+			s.stage.objectList[objListID].charid=0
+			}
+		}
+}
+
 
 func handleMsgSysEnterStage(s *Session, p mhfpacket.MHFPacket) {
 	pkt := p.(*mhfpacket.MsgSysEnterStage)
