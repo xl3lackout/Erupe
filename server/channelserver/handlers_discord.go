@@ -3,7 +3,6 @@ package channelserver
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -13,58 +12,6 @@ import (
 func (s *Server) onDiscordMessage(ds *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore messages from our bot, or ones that are not in the correct channel.
 	if m.Author.ID == ds.State.User.ID || m.ChannelID != s.erupeConfig.Discord.ChannelID {
-		return
-	}
-
-	// Broadcast to the game clients.
-	data := m.Content
-
-	// Split on comma.
-	result := strings.Split(data, " ")
-
-	if result[0] == "!maintenancedate" && m.Author.ID == "836027554628370492" {
-		replaceDays := dayConvert(result[1])
-		replaceMonth := MonthConvert(result[3])
-
-		s.BroadcastChatMessage("MAINTENANCE EXCEPTIONNELLE :")
-		s.BroadcastChatMessage("Les serveurs seront temporairement inaccessibles le")
-		s.BroadcastChatMessage(fmt.Sprintf("%s %s %s %s a partir de %s heures et %s minutes.", replaceDays, result[2], replaceMonth, result[4], result[5], result[6])) // Jour Mois Année Heures Minutes
-		s.BroadcastChatMessage("Evitez de vous connecter durant cette periode. Veuillez nous")
-		s.BroadcastChatMessage("excuser pour la gene occasionee. Merci de votre cooperation.")
-		return
-	} else if result[0] == "!maintenance" && m.Author.ID == "836027554628370492" {
-		s.BroadcastChatMessage("RAPPEL DE MAINTENANCE DU MARDI (18H-22H): Les serveurs seront")
-		s.BroadcastChatMessage("temporairement inaccessibles dans 15 minutes. Veuillez ne pas")
-		s.BroadcastChatMessage("vous connecter ou deconnectez-vous maintenant, afin de ne pas")
-		s.BroadcastChatMessage("perturber les operations de maintenance. Veuillez nous")
-		s.BroadcastChatMessage("excuser pour la gene occasionnee. Merci de votre cooperation.")
-		s.TimerUpdate(15, 0, true)
-		return
-	} else if result[0] == "!Rmaintenancedate" && m.Author.ID == "836027554628370492" {
-		s.BroadcastChatMessage("RAPPEL DE MAINTENANCE EXCEPTIONNELLE: Les serveurs seront")
-		s.BroadcastChatMessage("temporairement inaccessibles dans 15 minutes. Veuillez ne pas")
-		s.BroadcastChatMessage("vous connecter ou deconnectez-vous maintenant, afin de ne pas")
-		s.BroadcastChatMessage("perturber les operations de maintenance. Veuillez nous")
-		s.BroadcastChatMessage("excuser pour la gene occasionnee. Merci de votre cooperation.")
-		s.TimerUpdate(15, 1, true)
-		return
-	} else if result[0] == "!maintenanceStop" && m.Author.ID == "836027554628370492" {
-		s.BroadcastChatMessage("INFORMATION: A titre exceptionnel, il n'y aura pas de")
-		s.BroadcastChatMessage("maintenance de 18h a 22h, vous pouvez continuer de jouer")
-		s.BroadcastChatMessage("librement jusqu'a la prochaine annonce de maintenance !")
-		s.BroadcastChatMessage("Bonne chasse !")
-		s.TimerUpdate(0, 0, false)
-		return
-	} else if result[0] == "!maintenanceStopExec" && m.Author.ID == "836027554628370492" {
-		replaceDays := dayConvert(result[1])
-		replaceMonth := MonthConvert(result[3])
-
-		s.BroadcastChatMessage("INFORMATION: A titre exceptionnel, il n'y aura pas de")
-		s.BroadcastChatMessage(fmt.Sprintf("maintenance le %s %s %s %s a partir de", replaceDays, result[2], replaceMonth, result[4])) // Jour Mois Année
-		s.BroadcastChatMessage(fmt.Sprintf("%s heures et %s minutes, vous pouvez continuer de jouer", result[5], result[6]))           // Heures Minutes
-		s.BroadcastChatMessage("librement jusqu'a la prochaine annonce de maintenance !")
-		s.BroadcastChatMessage("Bonne chasse !")
-		s.TimerUpdate(0, 1, false)
 		return
 	}
 
