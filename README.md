@@ -1,3 +1,5 @@
+# [>>> Erupe Community Edition has moved! <<<](https://github.com/ZeruLight/Erupe)
+---
 # Erupe Community Reupload
  This is a community upload of a community project. The amount of people who worked on it is innumerous, and hard to keep track of. But id like to contribute this to the efforts of Ando, Fists Team, the French Team, Mai's Team and the many wondeful members of the MHFZ community who gave their time and energy to help us. No matter the relations, these files will remain public and open source, free for all to use and modify. 
 
